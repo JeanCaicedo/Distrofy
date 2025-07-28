@@ -14,12 +14,14 @@ Desarrollar una aplicación web completa donde:
 
 | Área | Herramienta |
 |------|-------------|
-| **Frontend** | React + React Router + Context/Redux |
-| **Backend** | Node.js + Express |
-| **Base de datos** | MongoDB + Mongoose |
-| **Almacenamiento** | Cloudinary o AWS S3 |
+| **Frontend** | Angular 17+ + NgRx (state management) |
+| **Backend** | Spring Boot 3+ + Spring Security + Spring Data JPA |
+| **Base de datos** | PostgreSQL |
+| **Almacenamiento** | AWS S3 o Azure Blob Storage |
 | **Pagos** | Stripe API (modo sandbox) |
-| **Autenticación** | JWT + bcrypt |
+| **Autenticación** | JWT + Spring Security |
+| **Testing** | JUnit 5, Mockito, Jasmine/Karma |
+| **Documentación API** | Swagger/OpenAPI |
 
 ## 📦 Funcionalidades Principales
 
@@ -53,182 +55,358 @@ Desarrollar una aplicación web completa donde:
 - ✅ Herramientas de baneos y eliminación
 - ✅ Estadísticas básicas de la plataforma
 
-## 🗃️ Esquema de Base de Datos (MongoDB)
+## 🗃️ Esquema de Base de Datos (PostgreSQL con JPA)
 
-### Colección: Users
-```javascript
-User: {
-  _id: ObjectId,
-  name: String,
-  email: String (unique),
-  passwordHash: String,
-  role: 'vendedor' | 'cliente',
-  purchasedProducts: [ObjectId], // referencias a Product
-  createdAt: Date,
-  updatedAt: Date,
-  isActive: Boolean
+### Entidad: User
+```java
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+
+    @Column(unique = true)
+    private String email;
+
+    private String passwordHash;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role; // VENDOR, CLIENT, ADMIN
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_purchased_products",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    private Set<Product> purchasedProducts = new HashSet<>();
+
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    private boolean active = true;
+
+    // getters, setters, etc.
 }
 ```
 
-### Colección: Products
-```javascript
-Product: {
-  _id: ObjectId,
-  title: String,
-  description: String,
-  price: Number,
-  category: String,
-  fileUrl: String, // URL del archivo en Cloudinary/S3
-  thumbnailUrl: String, // imagen de vista previa
-  sellerId: ObjectId, // referencia a User
-  downloads: Number, // contador de descargas
-  isActive: Boolean,
-  createdAt: Date,
-  updatedAt: Date
+### Entidad: Product
+```java
+@Entity
+@Table(name = "products")
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+    private String description;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal price;
+
+    private String category;
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    private User seller;
+
+    private Integer downloads = 0;
+
+    private boolean active = true;
+
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    // getters, setters, etc.
 }
 ```
 
-### Colección: Purchases
-```javascript
-Purchase: {
-  _id: ObjectId,
-  userId: ObjectId, // referencia a User
-  productId: ObjectId, // referencia a Product
-  paymentIntentId: String, // ID de Stripe
-  amount: Number,
-  paid: Boolean,
-  downloadToken: String, // token único para descarga
-  downloadExpiry: Date,
-  purchasedAt: Date
+### Entidad: Purchase
+```java
+@Entity
+@Table(name = "purchases")
+public class Purchase {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    @Column(name = "payment_intent_id")
+    private String paymentIntentId;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal amount;
+
+    private boolean paid;
+
+    @Column(name = "download_token")
+    private String downloadToken;
+
+    @Column(name = "download_expiry")
+    private LocalDateTime downloadExpiry;
+
+    @Column(name = "purchased_at")
+    private LocalDateTime purchasedAt;
+
+    // getters, setters, etc.
 }
 ```
 
-## 🚀 Plan de Desarrollo (5 Semanas)
+## 🚀 Plan de Desarrollo (6 Semanas)
 
 ### 🧱 Semana 1 – Fundación del Proyecto
 - [ ] **Setup del entorno de desarrollo**
   - Inicializar repositorio Git
   - Configurar estructura de carpetas (frontend/backend)
-  - Setup de React con Vite/Create React App
-  - Configuración de Express.js
-  - Conexión inicial a MongoDB
+  - Inicializar proyecto Spring Boot con Spring Initializr
+  - Configurar dependencias de Spring (Web, Security, Data JPA, etc.)
+  - Inicializar proyecto Angular con Angular CLI
+  - Configurar Angular Material y NgRx
+  - Configuración de PostgreSQL y conexión desde Spring
 
 - [ ] **Sistema de autenticación**
-  - Modelo de usuarios con Mongoose
-  - Endpoints de registro y login
-  - Implementación de JWT
-  - Middleware de autenticación
-  - Páginas de registro/login en React
+  - Implementar entidades JPA y repositorios
+  - Configurar Spring Security y JWT
+  - Crear servicios de autenticación
+  - Implementar endpoints de registro y login (REST Controllers)
+  - Crear interceptores y guardias en Angular
+  - Desarrollar componentes de login/registro
 
 ### 💾 Semana 2 – Gestión de Productos
 - [ ] **Backend de productos**
-  - Modelo de productos en MongoDB
-  - CRUD completo de productos
-  - Validaciones de servidor
+  - Implementar entidades y repositorios JPA para productos
+  - Crear servicios de productos (Service Layer)
+  - Desarrollar REST Controllers para operaciones CRUD
+  - Implementar validaciones con Bean Validation
+  - Manejo de excepciones centralizado (ControllerAdvice)
 
 - [ ] **Subida de archivos**
-  - Integración con Cloudinary o AWS S3
-  - Endpoint para subida de archivos
-  - Validación de tipos de archivo
-  - Optimización de imágenes de vista previa
+  - Integración con AWS S3 o Azure Blob Storage
+  - Desarrollar servicio para manejo de archivos
+  - Implementar endpoint multipart para subida
+  - Validación de tipos de archivo y seguridad
+  - Generación de URLs firmadas para acceso temporal
 
 - [ ] **Frontend de productos**
-  - Formulario de creación de productos
-  - Lista de productos del vendedor
-  - Catálogo público de productos
+  - Crear módulo Angular para productos
+  - Implementar servicios para comunicación con API
+  - Desarrollar formularios reactivos con validación
+  - Crear componentes para listado de productos
+  - Implementar lazy loading para catálogo
 
 ### 💰 Semana 3 – Sistema de Pagos
 - [ ] **Integración con Stripe**
-  - Configuración de Stripe en modo sandbox
-  - Creación de checkout sessions
-  - Webhook para confirmación de pagos
-  - Manejo de errores de pago
+  - Implementar cliente Stripe con RestTemplate/WebClient
+  - Desarrollar servicio para crear checkout sessions
+  - Implementar controlador para webhooks de Stripe
+  - Manejo de errores y transacciones
+  - Implementar idempotencia y compensación
 
-- [ ] **Base de datos de compras**
-  - Modelo de compras
-  - Guardado de transacciones exitosas
-  - Actualización de estado de compras
+- [ ] **Gestión de compras**
+  - Implementar entidades y repositorios JPA para compras
+  - Desarrollar servicio transaccional para procesar pagos
+  - Implementar mecanismo de compensación para fallos
+  - Crear endpoints para historial de compras
+  - Desarrollar componentes Angular para proceso de pago
 
 ### 📥 Semana 4 – Descargas y Perfiles de Usuario
 - [ ] **Sistema de descargas seguras**
-  - Generación de tokens temporales
-  - Endpoint protegido de descarga
-  - Validación de permisos de descarga
-  - Expiración automática de enlaces
+  - Implementar servicio para generación de tokens JWT de descarga
+  - Desarrollar sistema de permisos basado en roles (RBAC)
+  - Crear filtro de seguridad personalizado
+  - Implementar servicio para URLs presigned en S3/Azure
+  - Programar tareas con @Scheduled para limpieza de tokens expirados
 
 - [ ] **Perfiles de usuario**
-  - Panel "Mis productos comprados"
-  - Panel "Mis productos en venta"
-  - Estadísticas básicas
-  - Historial de transacciones
+  - Implementar DTOs para proyecciones personalizadas
+  - Desarrollar endpoints para perfil de usuario
+  - Crear servicios Angular para manejo de estado
+  - Implementar componentes de panel de usuario
+  - Desarrollar gráficos y estadísticas con ngx-charts
 
 - [ ] **Páginas de detalle**
-  - Vista detallada de productos
-  - Proceso de compra optimizado
-  - Reviews y valoraciones (opcional)
+  - Crear componentes Angular para vistas detalladas
+  - Implementar rutas parametrizadas
+  - Desarrollar sistema de calificaciones y reviews
+  - Optimizar flujo de compra con guards
+  - Implementar carga diferida de recursos
 
-### 🎨 Semana 5 – Pulimiento y Deploy
-- [ ] **Diseño y UX**
-  - Implementación de diseño responsive
-  - Mejora de la experiencia de usuario
-  - Optimización de rendimiento
-  - Testing de usabilidad
+### 🎨 Semana 5 – Testing y Admin
+- [ ] **Testing exhaustivo**
+  - Implementar tests unitarios con JUnit y Mockito
+  - Desarrollar tests de integración con TestRestTemplate
+  - Crear tests end-to-end con Cypress
+  - Configurar cobertura de código con JaCoCo
+  - Implementar tests de componentes Angular con Jasmine/Karma
 
 - [ ] **Panel de administración**
-  - Dashboard básico de admin
-  - Gestión de usuarios y productos
-  - Herramientas de moderación
+  - Implementar módulo admin con lazy loading
+  - Desarrollar dashboard con métricas
+  - Crear componentes para gestión de usuarios/productos
+  - Implementar herramientas de moderación y baneos
+  - Desarrollar sistema de notificaciones admin
 
-- [ ] **Deploy y producción**
-  - Deploy del frontend en Vercel/Netlify
-  - Deploy del backend en Render/Railway
-  - Configuración de variables de entorno
-  - Testing en producción
-  - Documentación final
+- [ ] **Diseño y UX**
+  - Implementar diseño responsive con Angular Material
+  - Optimizar experiencia de usuario con interceptores
+  - Crear componentes de feedback y mensajes de error
+  - Implementar animaciones y transiciones
+  - Optimizar rendimiento con lazy loading y Virtual Scroll
+
+### 🚀 Semana 6 – Despliegue y Documentación
+- [ ] **Documentación de API**
+  - Implementar Swagger/OpenAPI con SpringDoc
+  - Documentar endpoints con anotaciones
+  - Crear ejemplos de respuestas y peticiones
+  - Generar documentación exportable
+  - Implementar versionado de API
+
+- [ ] **Configuración de CI/CD**
+  - Configurar GitHub Actions o Jenkins
+  - Implementar build automatizado
+  - Configurar análisis estático de código (SonarQube)
+  - Automatizar despliegue a entornos
+  - Configurar monitoreo de calidad
+
+- [ ] **Despliegue**
+  - Dockerizar aplicaciones (frontend y backend)
+  - Configurar Docker Compose para desarrollo
+  - Desplegar backend en AWS/Azure/GCP
+  - Configurar CDN para frontend
+  - Implementar monitoreo y logging centralizado
 
 ## 🔧 Comandos de Desarrollo
 
+### Backend (Spring Boot)
+```bash
+# Ejecutar aplicación Spring Boot
+./mvnw spring-boot:run
+
+# Compilar proyecto
+./mvnw clean package
+
+# Ejecutar tests
+./mvnw test
+
+# Generar reporte de cobertura de código
+./mvnw verify
+
+# Ejecutar con perfil específico
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### Frontend (Angular)
 ```bash
 # Instalar dependencias
 npm install
 
-# Desarrollo frontend
-npm run dev:frontend
+# Iniciar servidor de desarrollo
+ng serve
 
-# Desarrollo backend
-npm run dev:backend
+# Construir para producción
+ng build --prod
 
-# Desarrollo completo (concurrente)
-npm run dev
+# Ejecutar tests unitarios
+ng test
 
-# Build para producción
-npm run build
+# Ejecutar tests end-to-end
+ng e2e
 
-# Tests
-npm run test
+# Generar componente/servicio/etc
+ng generate component mi-componente
+```
+
+### Docker
+```bash
+# Construir imágenes
+docker-compose build
+
+# Iniciar servicios
+docker-compose up
+
+# Detener servicios
+docker-compose down
 ```
 
 ## 📝 Variables de Entorno Requeridas
 
-```env
+### Backend (application.properties/application.yml)
+```properties
 # Base de datos
-MONGODB_URI=mongodb://localhost:27017/distrofy
+spring.datasource.url=jdbc:postgresql://localhost:5432/distrofy
+spring.datasource.username=postgres
+spring.datasource.password=password
+spring.jpa.hibernate.ddl-auto=update
 
 # JWT
-JWT_SECRET=your_jwt_secret_key
+jwt.secret=your_jwt_secret_key
+jwt.expiration=86400000
 
 # Stripe
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+stripe.api.key=sk_test_...
+stripe.webhook.secret=whsec_...
 
-# Almacenamiento (Cloudinary)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+# AWS S3
+aws.accessKey=your_aws_access_key
+aws.secretKey=your_aws_secret_key
+aws.region=us-east-1
+aws.s3.bucket=distrofy-files
 
-# URLs
-FRONTEND_URL=http://localhost:3000
-BACKEND_URL=http://localhost:5000
+# Servidor
+server.port=8080
+server.servlet.context-path=/api
+spring.servlet.multipart.max-file-size=10MB
+
+# URLs de aplicación
+app.frontend.url=http://localhost:4200
+```
+
+### Frontend (environment.ts)
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:8080/api',
+  stripePublicKey: 'pk_test_...',
+  fileMaxSize: 10485760, // 10MB en bytes
+};
+```
+
+### Docker (.env)
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_DB=distrofy
+JWT_SECRET=your_jwt_secret_key
+STRIPE_API_KEY=sk_test_...
+AWS_ACCESS_KEY=your_aws_access_key
+AWS_SECRET_KEY=your_aws_secret_key
 ```
 
 ## 🤝 Contribución
