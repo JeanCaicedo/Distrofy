@@ -27,7 +27,7 @@ POST /api/auth/register
   "name": "Nombre del Usuario",
   "email": "usuario@ejemplo.com",
   "password": "contraseña123",
-  "role": "CLIENT" // Opcional, por defecto es CLIENT
+  "role": "CLIENT"
 }
 ```
 
@@ -98,7 +98,6 @@ Authorization: Bearer <jwt_token>
 
 ### 1. Configurar Base de Datos
 ```sql
--- Ejecutar en PostgreSQL
 CREATE DATABASE distrofy;
 CREATE USER distrofy_user WITH PASSWORD 'jeanjean123';
 GRANT ALL PRIVILEGES ON DATABASE distrofy TO distrofy_user;
@@ -112,15 +111,12 @@ cd backend
 
 ### 3. Probar Endpoints
 ```bash
-# Health check
 curl http://localhost:8080/api/auth/health
 
-# Registrar usuario
 curl -X POST http://localhost:8080/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"name":"Test User","email":"test@example.com","password":"123456"}'
 
-# Login
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"123456"}'

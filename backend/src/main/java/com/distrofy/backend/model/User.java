@@ -47,7 +47,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Constructores
     public User() {}
 
     public User(String name, String email, String passwordHash, UserRole role) {
@@ -58,7 +57,6 @@ public class User {
         this.active = true;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }

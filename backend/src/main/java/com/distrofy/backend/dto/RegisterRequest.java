@@ -16,9 +16,8 @@ public class RegisterRequest {
     @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String password;
     
-    private String role = "CLIENT"; // Por defecto
+    private String role = "CLIENT";
 
-    // Getters y Setters
     public String getName() {
         return name;
     }

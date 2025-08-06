@@ -11,7 +11,6 @@ public class AuthRequest {
     @NotBlank(message = "La contraseña es requerida")
     private String password;
 
-    // Getters y Setters
     public String getEmail() {
         return email;
     }

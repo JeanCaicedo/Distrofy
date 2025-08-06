@@ -13,7 +13,6 @@ public class AuthResponse {
         this.name = name;
     }
 
-    // Getters y Setters
     public String getToken() {
         return token;
     }

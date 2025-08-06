@@ -74,7 +74,7 @@ public class User {
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    private UserRole role; // VENDOR, CLIENT, ADMIN
+    private UserRole role;
 
     @ManyToMany
     @JoinTable(
@@ -93,8 +93,6 @@ public class User {
     private LocalDateTime updatedAt;
 
     private boolean active = true;
-
-    // getters, setters, etc.
 }
 ```
 
@@ -136,8 +134,6 @@ public class Product {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    // getters, setters, etc.
 }
 ```
 
@@ -174,8 +170,6 @@ public class Purchase {
 
     @Column(name = "purchased_at")
     private LocalDateTime purchasedAt;
-
-    // getters, setters, etc.
 }
 ```
 
@@ -306,85 +300,116 @@ public class Purchase {
 
 ### Backend (Spring Boot)
 ```bash
-# Ejecutar aplicación Spring Boot
 ./mvnw spring-boot:run
 
-# Compilar proyecto
 ./mvnw clean package
 
-# Ejecutar tests
 ./mvnw test
 
-# Generar reporte de cobertura de código
 ./mvnw verify
 
-# Ejecutar con perfil específico
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
 ### Frontend (Angular)
 ```bash
-# Instalar dependencias
 npm install
 
-# Iniciar servidor de desarrollo
 ng serve
 
-# Construir para producción
 ng build --prod
 
-# Ejecutar tests unitarios
 ng test
 
-# Ejecutar tests end-to-end
 ng e2e
 
-# Generar componente/servicio/etc
 ng generate component mi-componente
 ```
 
 ### Docker
 ```bash
-# Construir imágenes
-docker-compose build
+.\scripts\docker-setup.ps1 dev
 
-# Iniciar servicios
-docker-compose up
+.\scripts\docker-setup.ps1 prod
 
-# Detener servicios
+.\scripts\docker-setup.ps1 stop
+
+./scripts/docker-setup.sh dev
+
+./scripts/docker-setup.sh prod
+
+./scripts/docker-setup.sh stop
+
+docker-compose -f docker-compose.dev.yml up --build
+
+docker-compose up --build
+
 docker-compose down
+
+docker-compose logs -f backend
+
+docker-compose logs -f frontend
+
+docker-compose logs -f postgres
+```
+
+## 🐳 Docker Setup
+
+Para una configuración rápida con Docker, consulta la documentación completa en [DOCKER_README.md](DOCKER_README.md).
+
+### Inicio Rápido con Docker
+
+```bash
+git clone <tu-repositorio>
+cd Distrofy
+
+.\scripts\docker-setup.ps1 dev
+
+./scripts/docker-setup.sh dev
+```
+
+### Arquitectura Docker
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   PostgreSQL    │
+│   (Angular)     │    │  (Spring Boot)  │    │   Database      │
+│   Port: 4200    │◄──►│   Port: 8080    │◄──►│   Port: 5432    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## 📝 Variables de Entorno Requeridas
 
+### Docker (.env)
+```env
+POSTGRES_DB=distrofy
+POSTGRES_USER=distrofy_user
+POSTGRES_PASSWORD=jeanjean123
+JWT_SECRET=tu_jwt_secret_muy_seguro
+```
+
 ### Backend (application.properties/application.yml)
 ```properties
-# Base de datos
 spring.datasource.url=jdbc:postgresql://localhost:5432/distrofy
 spring.datasource.username=postgres
 spring.datasource.password=password
 spring.jpa.hibernate.ddl-auto=update
 
-# JWT
 jwt.secret=your_jwt_secret_key
 jwt.expiration=86400000
 
-# Stripe
 stripe.api.key=sk_test_...
 stripe.webhook.secret=whsec_...
 
-# AWS S3
 aws.accessKey=your_aws_access_key
 aws.secretKey=your_aws_secret_key
 aws.region=us-east-1
 aws.s3.bucket=distrofy-files
 
-# Servidor
 server.port=8080
 server.servlet.context-path=/api
 spring.servlet.multipart.max-file-size=10MB
 
-# URLs de aplicación
 app.frontend.url=http://localhost:4200
 ```
 
@@ -394,7 +419,7 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api',
   stripePublicKey: 'pk_test_...',
-  fileMaxSize: 10485760, // 10MB en bytes
+  fileMaxSize: 10485760,
 };
 ```
 

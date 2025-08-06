@@ -1,0 +1,20 @@
+# Dockerfile de desarrollo para el backend de Spring Boot
+FROM openjdk:17-jdk-slim
+
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven
+
+# Copiar el archivo pom.xml
+COPY backend/pom.xml .
+
+# Copiar el código fuente
+COPY backend/src ./src
+
+# Exponer puerto
+EXPOSE 8080
+
+# Comando para ejecutar en modo desarrollo con hot reload
+CMD ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments='-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005'"] 

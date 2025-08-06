@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: distrofy-postgres-local
+    environment:
+      POSTGRES_DB: distrofy
+      POSTGRES_USER: distrofy_user
+      POSTGRES_PASSWORD: jeanjean123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+      - ./database_setup.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - distrofy-network-local
+
+  # Frontend Angular (Desarrollo)
+  frontend:
+    build:
+      context: ./distrofy-frontend
+      dockerfile: Dockerfile.dev
+    container_name: distrofy-frontend-local
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./distrofy-frontend:/app
+      - /app/node_modules  # Volumen para node_modules
+    networks:
+      - distrofy-network-local
+    restart: unless-stopped
+
+volumes:
+  postgres_data_local:
+
+networks:
+  distrofy-network-local:
+    driver: bridge 
