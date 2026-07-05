@@ -114,7 +114,7 @@ SPRING_DATASOURCE_USERNAME=distrofy_user
 SPRING_DATASOURCE_PASSWORD=<password_postgres>
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
-# JWT
+# JWT (HS512 requiere una clave de al menos 64 bytes; genera una con: openssl rand -base64 64)
 JWT_SECRET=<clave_secreta_larga_y_aleatoria>
 JWT_EXPIRATION=86400000
 
@@ -177,18 +177,25 @@ Endpoints implementados actualmente en el backend:
 | POST | `/api/auth/register` | Registro de usuario (nombre, email, password, rol) |
 | POST | `/api/auth/login` | Login, devuelve JWT |
 | GET | `/api/auth/health` | Healthcheck del servicio de autenticación |
+| GET | `/api/products/public` | Catálogo público (filtro opcional `?category=`) |
+| GET | `/api/products/public/{id}` | Detalle de producto |
+| GET | `/api/products/mine` | Productos del vendedor autenticado |
+| POST/PUT/DELETE | `/api/products` | Publicar / editar / retirar producto (VENDOR) |
+| POST | `/api/purchases` | Checkout (simulado, genera token de descarga) |
+| GET | `/api/purchases` | Historial de compras del usuario |
+| GET | `/api/downloads/{token}` | Canjear token de descarga |
 
-Endpoints planificados (entidades y repositorios ya modelados, controladores pendientes):
-- CRUD de productos (`/api/products`)
-- Checkout y webhooks Stripe (`/api/payments`, `/api/webhooks/stripe`)
-- Descargas con token firmado (`/api/downloads/{token}`)
-- Historial de compras (`/api/purchases`)
+Endpoints planificados:
+- Checkout real y webhooks Stripe (`/api/payments`, `/api/webhooks/stripe`)
+- Subida de archivos (hoy los productos referencian URLs externas)
 
 Para el detalle completo de contratos y payloads, ver `API_DOCUMENTATION.md`.
 
 ## Estado del proyecto
 
-Proyecto en desarrollo activo y **no apto para producción**. El backend tiene implementado el módulo de autenticación (registro, login, JWT, Spring Security) y las entidades de dominio (`User`, `Product`, `Purchase`). Los módulos de productos, pagos Stripe, almacenamiento de archivos y descargas seguras están modelados pero aún no implementados a nivel de controladores y servicios. El frontend Angular 20 está inicializado con NgRx y Angular Material, pendiente de las vistas de catálogo y checkout.
+Proyecto en desarrollo activo y **no apto para producción**. El flujo completo del marketplace ya funciona end-to-end: registro/login con JWT, publicación de productos (rol VENDOR), catálogo público, detalle, carrito, checkout **simulado** (sin pasarela real) e historial de compras con descargas por token temporal (7 días). El frontend Angular 20 usa componentes standalone con signals, guards por rol e interceptor JWT.
+
+Pendiente: integración real de Stripe (el checkout actual marca las compras como pagadas directamente), subida de archivos a storage propio y tests.
 
 La integración con Stripe está prevista en modo sandbox únicamente; no hay credenciales de producción configuradas ni planificadas en esta etapa.
 

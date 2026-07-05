@@ -65,13 +65,93 @@ POST /api/auth/login
 }
 ```
 
+### Productos
+
+#### 4. Catálogo público
+```
+GET /api/products/public            (query opcional: ?category=ebooks)
+GET /api/products/public/{id}
+```
+**Descripción:** Lista los productos activos / detalle de un producto. No requiere autenticación. La respuesta nunca incluye `fileUrl` (solo se obtiene con un token de descarga).
+
+**Respuesta (elemento):**
+```json
+{
+  "id": 1,
+  "title": "Plantilla de CV",
+  "description": "...",
+  "price": 9.99,
+  "category": "plantillas",
+  "thumbnailUrl": "https://...",
+  "sellerId": 2,
+  "sellerName": "Ana",
+  "downloads": 14,
+  "createdAt": "2026-07-04T10:00:00"
+}
+```
+
+#### 5. Gestión del vendedor (requiere JWT, rol VENDOR o ADMIN)
+```
+GET    /api/products/mine        → mis productos
+POST   /api/products             → publicar producto
+PUT    /api/products/{id}        → editar (solo dueño o ADMIN)
+DELETE /api/products/{id}        → retirar (baja lógica, solo dueño o ADMIN)
+```
+
+**Body de POST/PUT:**
+```json
+{
+  "title": "Plantilla de CV",
+  "description": "Plantilla editable en Figma",
+  "price": 9.99,
+  "category": "plantillas",
+  "fileUrl": "https://storage/archivo.zip",
+  "thumbnailUrl": "https://storage/miniatura.png"
+}
+```
+
+### Compras y descargas
+
+#### 6. Checkout (requiere JWT)
+```
+POST /api/purchases
+```
+**Body:** `{ "productId": 1 }`
+
+**Descripción:** Checkout **simulado**: registra la compra como pagada y genera un token de descarga válido por 7 días. Cuando se integre Stripe, este endpoint creará un PaymentIntent y el webhook marcará el pago. Si ya compraste el producto y el token sigue vigente, devuelve la compra existente.
+
+**Respuesta:**
+```json
+{
+  "id": 10,
+  "productId": 1,
+  "productTitle": "Plantilla de CV",
+  "amount": 9.99,
+  "paid": true,
+  "downloadToken": "3f6c1a...",
+  "downloadExpiry": "2026-07-11T10:00:00",
+  "purchasedAt": "2026-07-04T10:00:00"
+}
+```
+
+#### 7. Historial de compras (requiere JWT)
+```
+GET /api/purchases
+```
+
+#### 8. Canjear descarga (público: el token es el secreto)
+```
+GET /api/downloads/{token}
+```
+**Respuesta:** `{ "title": "...", "fileUrl": "https://..." }` — incrementa el contador de descargas. Errores: `404` token inválido, `402` compra no pagada, `410` token expirado.
+
 ## 🔧 Configuración
 
 ### Base de Datos
 - **Tipo:** PostgreSQL
-- **URL:** `jdbc:postgresql://localhost:5432/distrofy`
-- **Usuario:** `distrofy_user`
-- **Contraseña:** `jeanjean123`
+- **URL:** `jdbc:postgresql://localhost:5432/distrofy` (variable `DB_URL`)
+- **Usuario:** variable `DB_USERNAME` (default dev: `distrofy_user`)
+- **Contraseña:** variable `DB_PASSWORD`
 
 ### JWT
 - **Algoritmo:** HS512
@@ -83,7 +163,8 @@ POST /api/auth/login
 ### Rutas Públicas
 - `/api/auth/**` - Endpoints de autenticación
 - `/api/health` - Health check
-- `/api/products/public/**` - Productos públicos (futuro)
+- `/api/products/public/**` - Catálogo público
+- `/api/downloads/**` - Canje de tokens de descarga
 
 ### Rutas Protegidas
 - Todas las demás rutas requieren autenticación JWT
@@ -138,13 +219,11 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 ## 🔄 Próximos Pasos
 
-1. **Implementar controladores para productos**
-2. **Agregar gestión de archivos**
-3. **Integrar sistema de pagos**
-4. **Implementar panel de administración**
-5. **Agregar validaciones adicionales**
-6. **Implementar refresh tokens**
-7. **Agregar logging y monitoreo**
+1. **Integrar Stripe** (PaymentIntent + webhook; hoy el checkout es simulado)
+2. **Subida real de archivos** (hoy los productos referencian URLs externas)
+3. **Implementar panel de administración**
+4. **Implementar refresh tokens**
+5. **Agregar logging y monitoreo**
 
 ## 📞 Soporte
 
